@@ -1,0 +1,14 @@
+---
+- name: Setup workstation
+  hosts: localhost
+
+
+  tasks:
+  - name: Install packages
+    community.general.pacman:
+      name:
+      - neovim
+      - chezmoi
+      - tmux
+      state: latest
+
