@@ -1,7 +1,9 @@
 ---
 - name: Setup workstation
   hosts: localhost
-
+  vars:
+    github_username: flunka
+    golang_version: 1.20.5
 
   tasks:
   - name: Install packages
@@ -10,5 +12,23 @@
       - neovim
       - chezmoi
       - tmux
+      - make
       state: latest
-
+    become: true
+  - name: Install oh-my-zsh
+    ansible.builtin.shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    register: command_result
+    failed_when:
+      - command_result.rc != 0
+      - '"ZSH folder already exists" not in command_result.stdout'
+    changed_when: command_result == 0  
+  - name: Init chezmoi
+    ansible.builtin.shell: chezmoi init --apply https://github.com/{{ github_username }}/dotfiles.git 
+  - name: Install golang
+    ansible.builtin.shell: |
+      wget https://go.dev/dl/go{{ golang_version }}.linux-amd64.tar.gz
+      rm -rf /usr/local/go && tar -C /usr/local -xzf go{{ golang_version }}.linux-amd64.tar.gz
+      rm go{{ golang_version }}.linux-amd64.tar.gz
+    args:
+      creates: /usr/local/go
+    become: true
